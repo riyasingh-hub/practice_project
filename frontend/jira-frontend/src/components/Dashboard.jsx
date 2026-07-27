@@ -1,0 +1,118 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams, Link } from "react-router-dom";
+
+export default function Dashboard() {
+
+  const { projectKey } = useParams();
+
+  const [project, setProject] = useState(null);
+
+  useEffect(() => {
+
+    axios
+      .get(
+        `http://localhost:3000/api/jira-data/project/${projectKey}`
+      )
+      .then((res) => {
+        setProject(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+
+  }, [projectKey]);
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-[#030712] text-white flex justify-center items-center">
+        Loading Project...
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#030712] text-white p-8">
+
+      <Link
+        to="/dashboard"
+        className="text-blue-400"
+      >
+        ← Back
+      </Link>
+
+      <div className="mt-6 bg-[#081120] rounded-xl p-8 border border-[#16243d]">
+
+        <h1 className="text-4xl font-bold">
+          {project.name}
+        </h1>
+
+        <p className="text-gray-400 mt-2">
+          Project Key: {project.key}
+        </p>
+
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
+
+        <div className="bg-[#081120] p-6 rounded-xl">
+
+          <h2 className="text-xl font-semibold mb-4">
+            Project Information
+          </h2>
+
+          <p>
+            <span className="text-gray-400">
+              Project ID:
+            </span>{" "}
+            {project.id}
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Type:
+            </span>{" "}
+            {project.projectType}
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Lead:
+            </span>{" "}
+            {project.projectLead}
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Private:
+            </span>{" "}
+            {String(project.isPrivate)}
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Simplified:
+            </span>{" "}
+            {String(project.simplified)}
+          </p>
+
+        </div>
+
+        <div className="bg-[#081120] p-6 rounded-xl">
+
+          <h2 className="text-xl font-semibold mb-4">
+            Description
+          </h2>
+
+          <p>
+            {project.description ||
+              "No description available"}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
