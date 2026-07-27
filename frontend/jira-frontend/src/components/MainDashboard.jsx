@@ -1,70 +1,3 @@
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-
-// function MainDashboard() {
-//   const [data, setData] = useState(null);
-
-//   useEffect(() => {
-//     axios
-//       .get("http://localhost:3000/api/jira-data")
-//       .then((res) => {
-//         setData(res.data);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//       });
-//   }, []);
-
-//   if (!data) {
-//     return <h2>Loading...</h2>;
-//   }
-
-//   return (
-//     <div style={{ padding: "30px" }}>
-//       <h1> My Jira Dashboard</h1>
-
-//       <h2>User Details</h2>
-
-//       <p>
-//         <strong>Name:</strong> {data.user.displayName}
-//       </p>
-
-//       <p>
-//         <strong>Account ID:</strong> {data.user.accountId}
-//       </p>
-
-//       <p>
-//         <strong>Active:</strong> {String(data.user.active)}
-//       </p>
-
-//       <h2>Jira Site</h2>
-
-//       <p>{data.jiraSite.url}</p>
-
-//       <p>
-//         <strong>Cloud ID:</strong> {data.cloudId}
-//       </p>
-
-//       <h2>Projects</h2>
-
-//       <ul>
-//         {data.projects.map((project) => (
-//           <li key={project.id}>
-//             {project.key} - {project.name}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
-
-// export default MainDashboard;
-
-
-
-
-
-
 import {useEffect, useState} from "react";
 import axios from "axios";
 import StatCard from "./StatCard";
@@ -83,6 +16,8 @@ import {
 
 export default function MainDashboard() {
   const [data,setData]= useState(null);
+  const [projectData, setProjectData] = useState(null);
+  
     useEffect(() => {
     axios
       .get("http://localhost:3000/api/jira-data")
@@ -92,7 +27,23 @@ export default function MainDashboard() {
       .catch((err) => {
         console.error(err);
       });
-  }, []);
+  },
+   []);
+
+   
+    useEffect(() => {
+      if(!data?.projects.length) return;
+      const projectKey = data.projects[0].key; // Get the first project's key
+    axios
+      .get(`http://localhost:3000/api/jira-data/project/${projectKey}`)
+      .then((res) => {
+        setData(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  },
+   []);
 
 
  if (!data) {
@@ -107,7 +58,8 @@ export default function MainDashboard() {
 
 <div className="grid md:grid-cols-2 gap-6 mt-8">
         <TicketStatusChart data={pieData} />
-        <ProjectBarChart data={projectData} />
+        {projectData && (
+         <ProjectBarChart projectData={projectData} />)}
       </div>
       
        <div className="bg-[#081120] border border-[#16243d] rounded-xl p-6">
