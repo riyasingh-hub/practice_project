@@ -117,6 +117,35 @@ export default function MainDashboard() {
         </h3>
 
       </div>
+      <div className="flex justify-between">
+        <h3 className="text-gray-400">
+          Account ID: {data.user.accountId}
+        </h3>
+
+      </div>
+      <div className="flex justify-between">
+        <h3 className="text-gray-400">
+          Active: {String(data.user.active)}
+        </h3>
+
+      </div>
+
+       <div className="flex justify-between">
+        <h3 className="text-gray-400">
+          Cloud Id: {data.cloudId}
+        </h3>
+
+      </div>
+
+              <h2>Projects</h2>
+
+         <ul>
+         {data.projects.map((project) => (
+           <li key={project.id}>
+             {project.key} - {project.name}
+           </li>
+         ))}
+       </ul>
 
       
 
