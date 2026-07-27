@@ -7,6 +7,13 @@ export default function Dashboard() {
   const { projectKey } = useParams();
 
   const [project, setProject] = useState(null);
+const [data, setData] = useState(null);
+useEffect(() => {
+axios.get(`http://localhost:3000/api/jira-data/project/${projectKey}/intelligence`)
+.then((res) => {
+setData(res.data);
+});
+}, [projectKey]);
 
   useEffect(() => {
 
@@ -23,6 +30,14 @@ export default function Dashboard() {
 
   }, [projectKey]);
 
+  if (!data || !data.metrics) {
+  return (
+    <div className="min-h-screen flex items-center justify-center text-white">
+      Loading Metrices...
+    </div>
+  );
+}
+
   if (!project) {
     return (
       <div className="min-h-screen bg-[#030712] text-white flex justify-center items-center">
@@ -32,6 +47,7 @@ export default function Dashboard() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-[#030712] text-white p-8">
 
       <Link
@@ -114,5 +130,138 @@ export default function Dashboard() {
       </div>
 
     </div>
+
+    <div className="min-h-screen bg-[#030712] text-white p-8">
+
+<h1 className="text-4xl font-bold mb-8">
+
+Project Intelligence
+
+</h1>
+<div className="grid md:grid-cols-4 gap-6">
+
+<div className="bg-[#081120] p-6 rounded-xl">
+
+<h3>Total Tickets</h3>
+
+<div className="text-4xl mt-3">
+
+{data.metrics.totalTickets}
+
+</div>
+
+</div>
+<div className="bg-[#081120] p-6 rounded-xl">
+
+<h3>Open</h3>
+
+<div className="text-4xl mt-3 text-yellow-400">
+
+{data.metrics.openTickets}
+
+</div>
+
+</div>
+<div className="bg-[#081120] p-6 rounded-xl">
+
+<h3>Completed</h3>
+
+<div className="text-4xl mt-3 text-green-400">
+
+{data.metrics.completedTickets}
+
+</div>
+
+</div>
+<div className="bg-[#081120] p-6 rounded-xl">
+
+<h3>In Progress</h3>
+
+<div className="text-4xl mt-3 text-blue-400">
+
+{data.metrics.inProgressTickets}
+
+</div>
+
+</div>
+</div>
+<div className="mt-10">
+<h2 className="text-2xl mb-4">
+
+Issue Intelligence
+
+</h2>
+<div className="space-y-4">
+
+{data.issues.map(issue => (
+
+<div
+
+key={issue.id}
+
+className="bg-[#081120] rounded-xl p-5 border border-[#16243d]"
+
+>
+<div className="flex justify-between">
+
+<h3 className="font-bold">
+
+{issue.key}
+
+</h3>
+<span>
+
+{issue.status}
+
+</span>
+</div>
+<p className="mt-2">
+
+{issue.summary}
+
+</p>
+<div className="grid md:grid-cols-4 gap-4 mt-4 text-sm text-gray-300">
+
+<div>
+
+Priority:
+
+{" "}
+
+{issue.priority}
+
+</div>
+
+ 
+
+<div>
+
+Assignee:
+
+{" "}
+
+{issue.assignee}
+
+</div>
+<div>
+
+Reporter:
+
+{" "}
+
+{issue.reporter}
+</div>
+<div>
+Due:
+{" "}
+{issue.dueDate || "N/A"}
+</div>
+</div>
+</div>
+))}
+</div>
+</div>
+</div>
+    </>
   );
 }

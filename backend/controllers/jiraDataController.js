@@ -182,3 +182,81 @@ exports.getProjectDetails = async (req, res) => {
         });
     }
 };
+
+exports.getProjectIntelligence = async (req, res) => {
+
+  try {
+
+    const accessToken = getAccessToken();
+    const cloudId = getCloudId();
+
+    const { projectKey } = req.params;
+
+    const allIssues = await axios.get(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search/jql`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+        params: {
+          jql: `project=${projectKey}`,
+          fields:
+            "summary,status,priority,assignee,created,duedate,reporter"
+        }
+      }
+    );
+
+    const issues = allIssues.data.issues || [];
+
+    const openTickets = issues.filter(
+      issue =>
+        issue.fields.status.name === "To Do"
+    );
+
+    const completedTickets = issues.filter(
+      issue =>
+        issue.fields.status.name === "Done"
+    );
+
+    const inProgressTickets = issues.filter(
+      issue =>
+        issue.fields.status.name === "In Progress"
+    );
+
+    res.json({
+
+      metrics: {
+        totalTickets: issues.length,
+        openTickets: openTickets.length,
+        completedTickets: completedTickets.length,
+        inProgressTickets: inProgressTickets.length
+      },
+
+      issues: issues.map(issue => ({
+        id: issue.id,
+        key: issue.key,
+        summary: issue.fields.summary,
+        status: issue.fields.status.name,
+        priority: issue.fields.priority?.name,
+        assignee:
+          issue.fields.assignee?.displayName ||
+          "Unassigned",
+        reporter:
+          issue.fields.reporter?.displayName,
+        created: issue.fields.created,
+        dueDate: issue.fields.duedate
+      }))
+
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error:
+        error.response?.data ||
+        error.message
+    });
+
+  }
+
+};
