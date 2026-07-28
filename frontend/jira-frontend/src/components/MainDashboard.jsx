@@ -20,23 +20,22 @@ export default function MainDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [
-          jiraRes,
-          issuesRes,
-          projectsRes,
-          metricsRes,
-        ] = await Promise.all([
+        const jiraRes = await axios.get(
+          "http://localhost:3000/api/jira-data"
+        );
+
+        const accountId = jiraRes.data?.user?.accountId;
+
+        // fetch DB-backed data scoped to accountId
+        const [issuesRes, projectsRes, metricsRes] = await Promise.all([
           axios.get(
-            "http://localhost:3000/api/jira-data"
+            `http://localhost:3000/api/jira-data/db/issues${accountId ? `?accountId=${accountId}` : ""}`
           ),
           axios.get(
-            "http://localhost:3000/api/jira-data/db/issues"
+            `http://localhost:3000/api/jira-data/db/projects${accountId ? `?accountId=${accountId}` : ""}`
           ),
           axios.get(
-            "http://localhost:3000/api/jira-data/db/projects"
-          ),
-          axios.get(
-            "http://localhost:3000/api/jira-data/db/metrics"
+            `http://localhost:3000/api/jira-data/db/metrics${accountId ? `?accountId=${accountId}` : ""}`
           ),
         ]);
 

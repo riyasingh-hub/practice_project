@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const issueSchema = new mongoose.Schema({
+    accountId: String,
     jiraId: String,
     key: String,
     summary: String,

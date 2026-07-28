@@ -21,6 +21,19 @@ exports.getJiraData = async (req, res) => {
       });
     }
 
+    // Get logged-in user
+    const myselfResponse = await axios.get(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/myself`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json"
+        }
+      }
+    );
+
+    const accountId = myselfResponse.data.accountId;
+
     // Get all projects
     const projectsResponse = await axios.get(
       `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/project`,
@@ -32,13 +45,14 @@ exports.getJiraData = async (req, res) => {
       }
     );
 
-    const projects = projectsResponse.data;
+    const projects = projectsResponse.data || [];
 
-    // Save all projects in MongoDB
+    // Save all projects in MongoDB (scoped to accountId)
     for (const p of projects) {
       await Project.findOneAndUpdate(
-        { jiraId: p.id },
+        { jiraId: p.id, accountId },
         {
+          accountId,
           jiraId: p.id,
           key: p.key,
           name: p.name,
@@ -63,24 +77,13 @@ exports.getJiraData = async (req, res) => {
       });
     }
 
-    // Get logged-in user
-    const myselfResponse = await axios.get(
-      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/myself`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json"
-        }
-      }
-    );
-
     // Save user
     await User.findOneAndUpdate(
       {
-        accountId: myselfResponse.data.accountId
+        accountId: accountId
       },
       {
-        accountId: myselfResponse.data.accountId,
+        accountId: accountId,
         displayName: myselfResponse.data.displayName,
         email: myselfResponse.data.emailAddress
       },
@@ -103,12 +106,14 @@ exports.getJiraData = async (req, res) => {
 
     const project = projectResponse.data;
 
-    // Save project
+    // Save project (scoped to accountId)
     await Project.findOneAndUpdate(
       {
-        jiraId: project.id
+        jiraId: project.id,
+        accountId
       },
       {
+        accountId,
         jiraId: project.id,
         key: project.key,
         name: project.name,
@@ -135,17 +140,20 @@ exports.getJiraData = async (req, res) => {
       simplified: project.simplified
     };
 
+    // Return projects saved for this accountId (avoid showing other users' projects)
+    const storedProjects = await Project.find({ accountId });
+
     res.json({
       user: {
-        accountId: myselfResponse.data.accountId,
+        accountId: accountId,
         displayName: myselfResponse.data.displayName,
         email: myselfResponse.data.emailAddress
       },
 
       project: projectDetails,
 
-      projects: projects.map((p) => ({
-        id: p.id,
+      projects: storedProjects.map((p) => ({
+        id: p.jiraId,
         key: p.key,
         name: p.name
       }))
@@ -239,6 +247,19 @@ exports.getProjectIntelligence = async (req, res) => {
 
     const { projectKey } = req.params;
 
+    // Get logged-in user to scope saved issues/metrics
+    const myselfResponse = await axios.get(
+      `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/myself`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json"
+        }
+      }
+    );
+
+    const accountId = myselfResponse.data.accountId;
+
     const allIssues = await axios.get(
       `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search/jql`,
       {
@@ -255,13 +276,16 @@ exports.getProjectIntelligence = async (req, res) => {
 
     const issues = allIssues.data.issues || [];
 
-    // Save Issues
+
+    // Save Issues (scoped to accountId)
     for (const issue of issues) {
       await Issue.findOneAndUpdate(
         {
-          jiraId: issue.id
+          jiraId: issue.id,
+          accountId
         },
         {
+          accountId,
           jiraId: issue.id,
           key: issue.key,
           summary: issue.fields.summary,
@@ -294,10 +318,11 @@ exports.getProjectIntelligence = async (req, res) => {
       (issue) => issue.fields.status.name === "In Progress"
     );
 
-    // Save Metrics
+    // Save Metrics (scoped to accountId)
     await Metrics.findOneAndUpdate(
-      {},
+      { accountId },
       {
+        accountId,
         totalTickets: issues.length,
         openTickets: openTickets.length,
         completedTickets: completedTickets.length,
@@ -357,7 +382,11 @@ exports.getProjectIntelligence = async (req, res) => {
 // Get all issues
 exports.getStoredIssues = async (req, res) => {
   try {
-    const issues = await Issue.find();
+    const accountId = req.query.accountId;
+
+    const filter = accountId ? { accountId } : {};
+
+    const issues = await Issue.find(filter);
 
     res.json(issues);
   } catch (error) {
@@ -370,7 +399,11 @@ exports.getStoredIssues = async (req, res) => {
 // Get all projects
 exports.getStoredProjects = async (req, res) => {
   try {
-    const projects = await Project.find();
+    const accountId = req.query.accountId;
+
+    const filter = accountId ? { accountId } : {};
+
+    const projects = await Project.find(filter);
 
     res.json(projects);
   } catch (error) {
@@ -383,7 +416,11 @@ exports.getStoredProjects = async (req, res) => {
 // Get latest metrics
 exports.getStoredMetrics = async (req, res) => {
   try {
-    const metrics = await Metrics.findOne().sort({
+    const accountId = req.query.accountId;
+
+    const filter = accountId ? { accountId } : {};
+
+    const metrics = await Metrics.findOne(filter).sort({
       updatedAt: -1
     });
 

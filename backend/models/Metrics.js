@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const metricsSchema = new mongoose.Schema({
+    accountId: String,
 
     totalTickets: Number,
 
