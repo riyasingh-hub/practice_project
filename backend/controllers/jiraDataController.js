@@ -318,6 +318,10 @@ exports.getProjectIntelligence = async (req, res) => {
       (issue) => issue.fields.status.name === "In Progress"
     );
 
+    const inReviewTickets = issues.filter(
+      (issue) => issue.fields.status.name === "In Review"
+    );
+
     // Save Metrics (scoped to accountId)
     await Metrics.findOneAndUpdate(
       { accountId },
@@ -327,6 +331,7 @@ exports.getProjectIntelligence = async (req, res) => {
         openTickets: openTickets.length,
         completedTickets: completedTickets.length,
         inProgressTickets: inProgressTickets.length,
+        inReviewTickets: inReviewTickets.length,
         updatedAt: new Date()
       },
       {
@@ -340,7 +345,8 @@ exports.getProjectIntelligence = async (req, res) => {
         totalTickets: issues.length,
         openTickets: openTickets.length,
         completedTickets: completedTickets.length,
-        inProgressTickets: inProgressTickets.length
+        inProgressTickets: inProgressTickets.length,
+        inReviewTickets: inReviewTickets.length
       },
 
       issues: issues.map((issue) => ({

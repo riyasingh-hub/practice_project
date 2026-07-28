@@ -30,6 +30,11 @@ router.get(
   getProjectIntelligence
 );
 
+router.get(
+  "/project-intelligence/:projectKey",
+  getProjectIntelligence
+);
+
 /*
 |--------------------------------------------------------------------------
 | MongoDB APIs
