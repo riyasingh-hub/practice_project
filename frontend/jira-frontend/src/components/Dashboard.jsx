@@ -138,7 +138,7 @@ setData(res.data);
 Project Intelligence
 
 </h1>
-<div className="grid md:grid-cols-4 gap-6">
+<div className="grid md:grid-cols-5 gap-6">
 
 <div className="bg-[#081120] p-6 rounded-xl">
 
@@ -184,6 +184,18 @@ Project Intelligence
 </div>
 
 </div>
+<div className="bg-[#081120] p-6 rounded-xl">
+
+<h3>In Review</h3>
+
+<div className="text-4xl mt-3 text-purple-400">
+
+{data.metrics.inReviewTickets}
+
+</div>
+
+</div>
+
 </div>
 <div className="mt-10">
 <h2 className="text-2xl mb-4">

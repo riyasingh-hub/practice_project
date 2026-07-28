@@ -23,7 +23,21 @@ export default function MainDashboard() {
         const jiraRes = await axios.get(
           "http://localhost:3000/api/jira-data"
         );
+const projects = jiraRes.data.projects;
 
+await Promise.all(
+
+projects.map((project) =>
+
+axios.get(
+
+`http://localhost:3000/api/jira-data/project-intelligence/${project.key}`
+
+)
+
+)
+
+);
         const accountId = jiraRes.data?.user?.accountId;
 
         // fetch DB-backed data scoped to accountId
@@ -153,13 +167,6 @@ export default function MainDashboard() {
               User:
             </span>{" "}
             {jiraData.user?.displayName}
-          </p>
-
-          <p>
-            <span className="text-gray-400">
-              Account ID:
-            </span>{" "}
-            {jiraData.user?.accountId}
           </p>
 
           <p>
