@@ -17,46 +17,73 @@ export default function MainDashboard() {
   const [projects, setProjects] = useState([]);
   const [metrics, setMetrics] = useState(null);
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError("");
+
+        console.log("Fetching Jira Data...");
+
         const jiraRes = await axios.get(
           "http://localhost:3000/api/jira-data"
         );
 
+        console.log("Jira Response:", jiraRes.data);
+
         const accountId = jiraRes.data?.user?.accountId;
 
-        // fetch DB-backed data scoped to accountId
-        const [issuesRes, projectsRes, metricsRes] = await Promise.all([
-          axios.get(
-            `http://localhost:3000/api/jira-data/db/issues${accountId ? `?accountId=${accountId}` : ""}`
-          ),
-          axios.get(
-            `http://localhost:3000/api/jira-data/db/projects${accountId ? `?accountId=${accountId}` : ""}`
-          ),
-          axios.get(
-            `http://localhost:3000/api/jira-data/db/metrics${accountId ? `?accountId=${accountId}` : ""}`
-          ),
-        ]);
+        const issuesUrl = `http://localhost:3000/api/jira-data/db/issues${
+          accountId ? `?accountId=${accountId}` : ""
+        }`;
+
+        const projectsUrl = `http://localhost:3000/api/jira-data/db/projects${
+          accountId ? `?accountId=${accountId}` : ""
+        }`;
+
+        const metricsUrl = `http://localhost:3000/api/jira-data/db/metrics${
+          accountId ? `?accountId=${accountId}` : ""
+        }`;
+
+        console.log("Issues URL:", issuesUrl);
+        console.log("Projects URL:", projectsUrl);
+        console.log("Metrics URL:", metricsUrl);
+
+        const [issuesRes, projectsRes, metricsRes] =
+          await Promise.all([
+            axios.get(issuesUrl),
+            axios.get(projectsUrl),
+            axios.get(metricsUrl),
+          ]);
+
+        console.log("Issues:", issuesRes.data);
+        console.log("Projects:", projectsRes.data);
+        console.log("Metrics:", metricsRes.data);
 
         setJiraData(jiraRes.data);
-        setIssues(issuesRes.data);
-        setProjects(projectsRes.data);
-        setMetrics(metricsRes.data);
-      } catch (error) {
-        console.error(error);
+        setIssues(issuesRes.data || []);
+        setProjects(projectsRes.data || []);
+        setMetrics(metricsRes.data || {});
+      } catch (err) {
+        console.error("Dashboard Error:", err);
+
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to load dashboard"
+        );
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  if (
-    !jiraData ||
-    !projects ||
-    !issues ||
-    !metrics
-  ) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#030712] flex items-center justify-center text-white">
         <div className="text-2xl font-bold">
@@ -66,64 +93,64 @@ export default function MainDashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center text-red-500">
+        <div>
+          <h2 className="text-2xl font-bold">
+            Error Loading Dashboard
+          </h2>
+          <p className="mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   const pieData = [
     {
       name: "Open",
-      value: metrics.openTickets || 0,
+      value: metrics?.openTickets || 0,
     },
     {
       name: "Completed",
-      value:
-        metrics.completedTickets || 0,
+      value: metrics?.completedTickets || 0,
     },
     {
       name: "In Progress",
-      value:
-        metrics.inProgressTickets || 0,
+      value: metrics?.inProgressTickets || 0,
     },
   ];
 
-  const projectBarData = projects.map(
-    (project) => ({
-      project: project.key,
-      tickets: issues.filter((issue) =>
+  const projectBarData = projects.map((project) => ({
+    project: project.key,
+    tickets: issues.filter((issue) =>
+      issue.key.startsWith(project.key)
+    ).length,
+  }));
+
+  const tableProjects = projects.map((project) => ({
+    name: project.name,
+    lead: project.projectLead || "Not Assigned",
+
+    tickets: issues.filter((issue) =>
+      issue.key.startsWith(project.key)
+    ).length,
+
+    done: issues.filter(
+      (issue) =>
+        issue.status === "Done" &&
         issue.key.startsWith(project.key)
-      ).length,
-    })
-  );
+    ).length,
 
-  const tableProjects = projects.map(
-    (project) => ({
-      name: project.name,
-      lead:
-        project.projectLead ||
-        "Not Assigned",
+    status: "Active",
+  }));
 
-      tickets: issues.filter((issue) =>
-        issue.key.startsWith(project.key)
-      ).length,
-
-      done: issues.filter(
-        (issue) =>
-          issue.status === "Done" &&
-          issue.key.startsWith(
-            project.key
-          )
-      ).length,
-
-      status: "Active",
-    })
-  );
-
-  const recentTickets = issues
-    .slice(0, 5)
-    .map((issue) => ({
-      id: issue.key,
-      title: issue.summary,
-      priority:
-        issue.priority || "N/A",
-      status: issue.status,
-    }));
+  const recentTickets = issues.slice(0, 5).map((issue) => ({
+    id: issue.key,
+    title: issue.summary,
+    priority: issue.priority || "N/A",
+    status: issue.status,
+  }));
 
   return (
     <div className="min-h-screen bg-[#030712] text-white p-6">
@@ -135,8 +162,7 @@ export default function MainDashboard() {
         </h1>
 
         <p className="text-gray-200 mt-2">
-          Real-time Jira Analytics &
-          Insights
+          Real-time Jira Analytics & Insights
         </p>
       </div>
 
@@ -149,31 +175,23 @@ export default function MainDashboard() {
 
         <div className="space-y-2">
           <p>
-            <span className="text-gray-400">
-              User:
-            </span>{" "}
-            {jiraData.user?.displayName}
+            <span className="text-gray-400">User:</span>{" "}
+            {jiraData?.user?.displayName}
           </p>
 
           <p>
-            <span className="text-gray-400">
-              Account ID:
-            </span>{" "}
-            {jiraData.user?.accountId}
+            <span className="text-gray-400">Account ID:</span>{" "}
+            {jiraData?.user?.accountId}
           </p>
 
           <p>
-            <span className="text-gray-400">
-              Email:
-            </span>{" "}
-            {jiraData.user?.email}
+            <span className="text-gray-400">Email:</span>{" "}
+            {jiraData?.user?.email}
           </p>
 
           <p>
-            <span className="text-gray-400">
-              Projects:
-            </span>{" "}
-            {jiraData.projects?.length}
+            <span className="text-gray-400">Projects:</span>{" "}
+            {jiraData?.projects?.length || 0}
           </p>
         </div>
       </div>
@@ -183,42 +201,33 @@ export default function MainDashboard() {
       <div className="grid md:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Total Tickets"
-          value={metrics.totalTickets}
+          value={metrics?.totalTickets || 0}
         />
 
         <StatCard
           title="Open Tickets"
-          value={metrics.openTickets}
+          value={metrics?.openTickets || 0}
         />
 
         <StatCard
           title="Completed"
-          value={
-            metrics.completedTickets
-          }
+          value={metrics?.completedTickets || 0}
         />
 
         <StatCard
           title="In Progress"
-          value={
-            metrics.inProgressTickets
-          }
+          value={metrics?.inProgressTickets || 0}
         />
       </div>
 
       {/* Charts */}
 
       <div className="grid md:grid-cols-2 gap-6">
-        <TicketStatusChart
-          data={pieData}
-        />
-
-        <ProjectBarChart
-          data={projectBarData}
-        />
+        <TicketStatusChart data={pieData} />
+        <ProjectBarChart data={projectBarData} />
       </div>
 
-      {/* Projects Grid */}
+      {/* Projects */}
 
       <div className="mt-8 bg-[#081120] border border-[#16243d] rounded-xl p-6">
         <h2 className="text-2xl font-bold mb-6">
@@ -226,50 +235,36 @@ export default function MainDashboard() {
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {jiraData.projects.map(
-            (project) => (
-              <div
-                key={project.id}
-                className="bg-[#101827] rounded-xl p-4 border border-[#1f2f4a] hover:border-blue-500 transition cursor-pointer"
-                onClick={() =>
-                  navigate(
-                    `/project/${project.key}`
-                  )
-                }
-              >
-                <h3 className="font-bold text-lg text-blue-400">
-                  {project.key}
-                </h3>
+          {(jiraData?.projects || []).map((project) => (
+            <div
+              key={project.id}
+              className="bg-[#101827] rounded-xl p-4 border border-[#1f2f4a] hover:border-blue-500 transition cursor-pointer"
+              onClick={() =>
+                navigate(`/project/${project.key}`)
+              }
+            >
+              <h3 className="font-bold text-lg text-blue-400">
+                {project.key}
+              </h3>
 
-                <p className="mt-2 text-gray-300">
-                  {project.name}
-                </p>
-              </div>
-            )
-          )}
+              <p className="mt-2 text-gray-300">
+                {project.name}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* AI Summary */}
 
       <div className="mt-8">
         <AISummary />
       </div>
 
-      {/* Projects Table */}
-
       <div className="mt-8">
-        <ProjectsTable
-          data={tableProjects}
-        />
+        <ProjectsTable data={tableProjects} />
       </div>
 
-      {/* Recent Tickets */}
-
       <div className="mt-8">
-        <RecentTickets
-          tickets={recentTickets}
-        />
+        <RecentTickets tickets={recentTickets} />
       </div>
     </div>
   );
