@@ -289,11 +289,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-
 dotenv.config();
-
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
@@ -302,6 +299,10 @@ const PORT = process.env.PORT || 3000;
 const jiraAuthRoutes = require("./routes/jiraAuthRoutes");
 const jiraDataRoutes = require("./routes/jiraDataRoutes");
 const { callback } = require("./controllers/jiraAuthController");
+
+const connectDB = require("./config/db");
+
+connectDB();
 
 app.get("/callback", callback);
 app.use("/auth", jiraAuthRoutes);
