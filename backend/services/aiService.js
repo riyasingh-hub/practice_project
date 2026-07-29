@@ -1,7 +1,7 @@
 const axios = require("axios");
  
 async function generateProjectSummary(prompt) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
  
   if (!apiKey) {
     console.warn("OPENAI_API_KEY is not configured.");
