@@ -80,22 +80,13 @@ axios.get(
     );
   }
  
-  const pieData = [
-    {
-      name: "Open",
-      value: metrics.openTickets || 0,
-    },
-    {
-      name: "Completed",
-      value:
-        metrics.completedTickets || 0,
-    },
-    {
-      name: "In Progress",
-      value:
-        metrics.inProgressTickets || 0,
-    },
-  ];
+  // Pie chart on main dashboard should show tickets per project
+  const pieData = projects.map((project) => ({
+    name: project.name,
+    value: issues.filter((issue) =>
+      issue.key.startsWith(project.key)
+    ).length,
+  }));
  
   const projectBarData = projects.map(
     (project) => ({
