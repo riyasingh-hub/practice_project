@@ -32,38 +32,88 @@ export default function AISummary() {
   };
 
   return (
-    <div className="bg-[#081120] p-6 rounded-xl border border-[#16243d]">
-      <h2 className="text-xl mb-4">AI Summary</h2>
-
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={fetchAISummary}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          disabled={loading}
-        >
-          {loading ? "Generating..." : "Generate AI Summary"}
-        </button>
-
-        {summary && (
-          <button
-            onClick={() => {
-              setSummary("");
-              setError("");
-            }}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      {error ? (
-        <p className="text-red-400">{error}</p>
-      ) : (
-        <p className="text-gray-300 leading-8 whitespace-pre-line">
-          {summary || "Click \"Generate AI Summary\" to create a summary."}
-        </p>
-      )}
+    <div className="bg-gradient-to-br from-[#081120] via-[#0d1728] to-[#111c31] p-6 md:p-8 rounded-2xl border border-[#1b2d4a] shadow-xl shadow-blue-950/20">
+  {/* Header */}
+  <div className="flex items-center gap-3 mb-6">
+    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20">
+      ✨
     </div>
+
+    <div>
+      <h2 className="text-2xl font-bold text-white">
+        AI Summary
+      </h2>
+      <p className="text-sm text-gray-400">
+        Generate an intelligent project summary
+      </p>
+    </div>
+  </div>
+
+  {/* Action Buttons */}
+  <div className="flex flex-wrap items-center gap-3 mb-6">
+    <button
+      onClick={fetchAISummary}
+      disabled={loading}
+      className="
+        px-5 py-2.5
+        rounded-xl
+        font-medium
+        cursor-pointer
+        text-white
+        bg-gradient-to-r
+        from-blue-600
+        to-cyan-500
+        hover:from-blue-500
+        hover:to-cyan-400
+        disabled:opacity-50
+        disabled:cursor-not-allowed
+        transition-all
+        duration-300
+        shadow-lg
+        shadow-blue-500/20
+        hover:shadow-blue-500/40
+      "
+    >
+      {loading ? "Generating..." : "Generate AI Summary"}
+    </button>
+
+    {summary && (
+      <button
+        onClick={() => {
+          setSummary("");
+          setError("");
+        }}
+        className="
+          px-5 py-2.5
+          rounded-xl
+          bg-[#162238]
+          border
+          border-[#2a4064]
+          text-white
+          hover:bg-[#1d2d47]
+          transition-all
+          duration-300
+        "
+      >
+        Clear
+      </button>
+    )}
+  </div>
+
+  {/* Content Area */}
+  <div className="rounded-2xl border border-[#1a2c4a] bg-[#0d1728]/70 p-5 min-h-[160px]">
+    {error ? (
+      <div className="flex items-center gap-2 text-red-400">
+        <span className="text-lg">⚠️</span>
+        <p>{error}</p>
+      </div>
+    ) : (
+      <p className="text-gray-300 leading-8 whitespace-pre-line">
+
+{summary}
+</p>
+    )}
+  </div>
+</div>
   );
 }
