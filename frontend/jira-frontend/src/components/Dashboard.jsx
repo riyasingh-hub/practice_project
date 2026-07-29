@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [project, setProject] = useState(null);
   const [data, setData] = useState(null);
   const [showOpenModal, setShowOpenModal] = useState(false);
+  const [showUnassignedModal, setShowUnassignedModal] = useState(false);
   const [selectedSprint, setSelectedSprint] = useState("All");
 
   const parseSprintValue = (value) => {
@@ -113,6 +114,10 @@ export default function Dashboard() {
     const status = String(issue.status || "").toLowerCase();
     return status === "open" || status === "to do" || status === "todo";
   });
+
+  const unassignedIssues = filteredIssues.filter(
+    (issue) => !issue.assignee || issue.assignee === "Unassigned"
+  );
  
   return (
     <>
@@ -206,7 +211,7 @@ export default function Dashboard() {
 Project Intelligence
  
 </h1>
-<div className="grid md:grid-cols-5 gap-6">
+<div className="grid md:grid-cols-6 gap-6">
  
 <div className="bg-[#081120] p-6 rounded-xl">
  
@@ -270,6 +275,24 @@ Project Intelligence
  
 </div>
  
+<div
+ className="bg-[#081120] p-6 rounded-xl cursor-pointer border border-transparent hover:border-yellow-300 transition"
+ onClick={() => setShowUnassignedModal(true)}
+>
+ 
+<h3>Unassigned</h3>
+ 
+<div className="text-4xl mt-3 text-orange-400">
+ 
+{unassignedIssues.length}
+ 
+</div>
+ 
+<p className="mt-2 text-sm text-gray-400">
+ Click to view unassigned issues
+ </p>
+</div>
+ 
 </div>
 
 {showOpenModal ? (
@@ -329,6 +352,64 @@ Project Intelligence
     </div>
   </div>
 ) : null}
+
+  {showUnassignedModal ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-3xl rounded-2xl bg-[#081120] p-6 border border-[#2d3a57] shadow-2xl text-white">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Unassigned Issues</h2>
+            <p className="text-sm text-gray-400">Showing all issues without an assignee.</p>
+          </div>
+          <button
+            className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-white hover:bg-white/10"
+            onClick={() => setShowUnassignedModal(false)}
+          >
+            Close
+          </button>
+        </div>
+
+        {unassignedIssues.length > 0 ? (
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {unassignedIssues.map((issue) => (
+              <div
+                key={issue.id || issue.key}
+                className="rounded-xl border border-[#16243d] bg-[#0b172b] p-4"
+              >
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">{issue.key}</h3>
+                    <p className="text-sm text-gray-400">{issue.summary}</p>
+                  </div>
+                  <span className="rounded-full bg-orange-500/15 px-3 py-1 text-sm text-orange-200">
+                    {issue.status}
+                  </span>
+                </div>
+                <div className="grid gap-3 mt-4 text-sm text-gray-300 md:grid-cols-4">
+                  <div>
+                    <span className="text-gray-400">Priority:</span> {issue.priority || "N/A"}
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Assignee:</span> {issue.assignee || "Unassigned"}
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Reporter:</span> {issue.reporter || "N/A"}
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Due:</span> {issue.dueDate || "N/A"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[#16243d] bg-[#0b172b] p-6 text-center text-gray-300">
+            No unassigned issues found for this project.
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null}
 
 <div className="mt-10">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
