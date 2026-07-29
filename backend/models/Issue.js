@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Project = require("./Project");
 
 const issueSchema = new mongoose.Schema({
     accountId: String,
@@ -10,7 +11,8 @@ const issueSchema = new mongoose.Schema({
     assignee: String,
     reporter: String,
     created: Date,
-    dueDate: Date
+    dueDate: Date,
+    projectKey: String,
 });
 
 module.exports = mongoose.model("Issue", issueSchema);
