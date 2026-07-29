@@ -10,6 +10,10 @@ const metricsSchema = new mongoose.Schema({
     completedTickets: Number,
 
     inProgressTickets: Number,
+    inReviewTickets: Number,
+ 
+  completionRate: Number,
+  backlogRate: Number,
 
     updatedAt: {
         type: Date,

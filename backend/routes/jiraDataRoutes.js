@@ -8,7 +8,8 @@ const {
   getAISummary,
   getStoredProjects,
   getStoredMetrics,
-  getStoredUsers
+  getStoredUsers,
+  syncProjectData
 } = require("../controllers/jiraDataController");
  
 const router = express.Router();
@@ -70,6 +71,16 @@ router.get(
 router.post(
   "/ai-summary",
   getAISummary
+);
+ 
+router.post(
+  "/sync/:projectKey",
+  syncProjectData
+);
+
+router.get(
+  "/sync/:projectKey",
+  syncProjectData
 );
  
 module.exports = router;

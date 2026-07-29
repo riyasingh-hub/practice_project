@@ -7,13 +7,76 @@ export default function Dashboard() {
   const { projectKey } = useParams();
  
   const [project, setProject] = useState(null);
-const [data, setData] = useState(null);
-useEffect(() => {
-axios.get(`http://localhost:3000/api/jira-data/project/${projectKey}/intelligence`)
-.then((res) => {
-setData(res.data);
-});
-}, [projectKey]);
+  const [data, setData] = useState(null);
+  const [showOpenModal, setShowOpenModal] = useState(false);
+  const [selectedSprint, setSelectedSprint] = useState("All");
+
+  const parseSprintValue = (value) => {
+    if (!value) return null;
+    if (typeof value === "string") {
+      // Jira may encode sprint metadata as a string in some cases
+      const match = value.match(/name=([^,]+)/);
+      if (match) return match[1];
+      return value;
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      return parseSprintValue(value[0]);
+    }
+    if (typeof value === "object") {
+      return value.name || value.displayName || null;
+    }
+    return null;
+  };
+
+  const getSprintName = (issue) => {
+    if (issue.sprint) return parseSprintValue(issue.sprint);
+    if (issue.fields?.sprint) return parseSprintValue(issue.fields.sprint);
+    if (issue.fields?.customfield_10020) {
+      return parseSprintValue(issue.fields.customfield_10020);
+    }
+    if (issue.customfield_10020) {
+      return parseSprintValue(issue.customfield_10020);
+    }
+    return null;
+  };
+
+  const sprintNames = Array.from(
+    new Set(
+      (data?.issues || [])
+        .map((issue) => getSprintName(issue))
+        .filter(Boolean)
+    )
+  );
+
+  useEffect(() => {
+    if (data?.issues) {
+      console.log("Sprint names:", sprintNames);
+      console.log(
+        "Issue sprint raw values:",
+        data.issues.map((issue) => ({
+          key: issue.key,
+          sprint: issue.sprint,
+          fieldsSprint: issue.fields?.sprint,
+          customfield10020: issue.fields?.customfield_10020,
+          sprintName: getSprintName(issue)
+        }))
+      );
+    }
+  }, [data?.issues, sprintNames]);
+
+  const filteredIssues =
+    selectedSprint === "All"
+      ? data?.issues || []
+      : (data?.issues || []).filter(
+          (issue) => getSprintName(issue) === selectedSprint
+        );
+
+  useEffect(() => {
+    axios.get(`http://localhost:3000/api/jira-data/project/${projectKey}/intelligence`)
+      .then((res) => {
+        setData(res.data);
+      });
+  }, [projectKey]);
  
   useEffect(() => {
  
@@ -31,12 +94,12 @@ setData(res.data);
   }, [projectKey]);
  
   if (!data || !data.metrics) {
-  return (
-    <div className="min-h-screen flex items-center justify-center text-white">
-      Loading Metrices...
-    </div>
-  );
-}
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Loading Metrices...
+      </div>
+    );
+  }
  
   if (!project) {
     return (
@@ -45,6 +108,11 @@ setData(res.data);
       </div>
     );
   }
+
+  const openIssues = filteredIssues.filter((issue) => {
+    const status = String(issue.status || "").toLowerCase();
+    return status === "open" || status === "to do" || status === "todo";
+  });
  
   return (
     <>
@@ -151,7 +219,10 @@ Project Intelligence
 </div>
  
 </div>
-<div className="bg-[#081120] p-6 rounded-xl">
+<div
+ className="bg-[#081120] p-6 rounded-xl cursor-pointer border border-transparent hover:border-yellow-300 transition"
+ onClick={() => setShowOpenModal(true)}
+>
  
 <h3>Open</h3>
  
@@ -161,6 +232,9 @@ Project Intelligence
  
 </div>
  
+<p className="mt-2 text-sm text-gray-400">
+ Click to view open / to do issues
+ </p>
 </div>
 <div className="bg-[#081120] p-6 rounded-xl">
  
@@ -197,16 +271,97 @@ Project Intelligence
 </div>
  
 </div>
+
+{showOpenModal ? (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="w-full max-w-3xl rounded-2xl bg-[#081120] p-6 border border-[#2d3a57] shadow-2xl text-white">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-semibold">Open / To Do Issues</h2>
+          <p className="text-sm text-gray-400">Showing all issues with status Open or To Do</p>
+        </div>
+        <button
+          className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-white hover:bg-white/10"
+          onClick={() => setShowOpenModal(false)}
+        >
+          Close
+        </button>
+      </div>
+
+      {openIssues.length > 0 ? (
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+          {openIssues.map((issue) => (
+            <div
+              key={issue.id}
+              className="rounded-xl border border-[#16243d] bg-[#0b172b] p-4"
+            >
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">{issue.key}</h3>
+                  <p className="text-sm text-gray-400">{issue.summary}</p>
+                </div>
+                <span className="rounded-full bg-yellow-500/15 px-3 py-1 text-sm text-yellow-200">
+                  {issue.status}
+                </span>
+              </div>
+              <div className="grid gap-3 mt-4 text-sm text-gray-300 md:grid-cols-4">
+                <div>
+                  <span className="text-gray-400">Priority:</span> {issue.priority || "N/A"}
+                </div>
+                <div>
+                  <span className="text-gray-400">Assignee:</span> {issue.assignee || "Unassigned"}
+                </div>
+                <div>
+                  <span className="text-gray-400">Reporter:</span> {issue.reporter || "N/A"}
+                </div>
+                <div>
+                  <span className="text-gray-400">Due:</span> {issue.dueDate || "N/A"}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#16243d] bg-[#0b172b] p-6 text-center text-gray-300">
+          No Open / To Do issues found for this project.
+        </div>
+      )}
+    </div>
+  </div>
+) : null}
+
 <div className="mt-10">
-<h2 className="text-2xl mb-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl mb-4">Issue Intelligence</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setSelectedSprint("All")}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                selectedSprint === "All"
+                  ? "bg-blue-600 text-white"
+                  : "bg-[#151f33] text-gray-300 hover:bg-[#1f2d4f]"
+              }`}
+            >
+              All
+            </button>
+            {sprintNames.map((name) => (
+              <button
+                key={name}
+                onClick={() => setSelectedSprint(name)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  selectedSprint === name
+                    ? "bg-blue-600 text-white"
+                    : "bg-[#151f33] text-gray-300 hover:bg-[#1f2d4f]"
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
  
-Issue Intelligence
- 
-</h2>
-<div className="space-y-4">
- 
-{data.issues.map(issue => (
- 
+{filteredIssues.map(issue => (
 <div
  
 key={issue.id}
