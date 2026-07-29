@@ -353,9 +353,9 @@ export default function MainDashboard() {
 
         <div className="relative z-10">
           {/* Project Key */}
-          <div className="inline-flex items-center px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold text-sm">
+          {/* <div className="inline-flex items-center px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-semibold text-sm">
             {project.key}
-          </div>
+          </div> */}
 
           {/* Project Name */}
           <h3 className="mt-4 text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">

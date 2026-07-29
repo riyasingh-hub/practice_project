@@ -246,7 +246,7 @@ export default function Dashboard() {
 Project Intelligence
  
 </h1>
-<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
 
   {/* Total Tickets */}
   <div className="group bg-gradient-to-br from-[#081120] to-[#111c31] p-6 rounded-2xl border border-[#1b2d4a] hover:border-cyan-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10">
