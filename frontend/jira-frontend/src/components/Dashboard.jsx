@@ -243,7 +243,7 @@ export default function Dashboard() {
  
 <h1 className="text-4xl font-bold mb-8">
  
-Project Intelligence
+Statistics
  
 </h1>
 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6 gap-6">

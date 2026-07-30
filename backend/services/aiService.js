@@ -9,7 +9,7 @@ async function generateProjectSummary(prompt) {
   }
  
   console.log(prompt);
- 
+
   try {
     const response = await axios.post(
       "https://openai.generative.engine.capgemini.com/v1/chat/completions",
