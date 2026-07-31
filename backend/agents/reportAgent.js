@@ -42,13 +42,13 @@ Provide:
 
 2. Project Health Assessment
 
+3. Fast progress and delay progress project
+
 3. Key Risks
 
 4. Positive Highlights
 
 5. Recommendations
-
-6. Management Actions
 
 Keep the report professional and concise.
 `;

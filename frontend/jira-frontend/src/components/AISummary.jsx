@@ -10,7 +10,7 @@ export default function AISummary() {
     setError("");
     try {
       const response = await fetch(
-        "http://localhost:3000/api/jira/test-report-agent"
+        "http://localhost:3000/api/jira/agent-report"
       );
 
       const data = await response.json();
