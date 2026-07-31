@@ -11,52 +11,37 @@ async function generateReport(
   console.log("REPORT AGENT STARTED");
 
   const prompt = `
-You are a Senior PMO, Delivery Manager and Engineering Leader.
-
-Analyze the project analytics below and create an executive report.
+You are an expert PMO analyst and delivery governance advisor.
+Use the analytics, project summaries, risk analysis, and recommendation data below to create a technical executive report for senior project leadership.
 
 Analytics:
-${JSON.stringify(
-  analytics,
-  null,
-  2
-)}
+${JSON.stringify(analytics, null, 2)}
 
 Risk Analysis:
-${JSON.stringify(
-  riskAnalysis,
-  null,
-  2
-)}
+${JSON.stringify(riskAnalysis, null, 2)}
 
 Recommendations:
-${JSON.stringify(
-  recommendationAnalysis,
-  null,
-  2
-)}
+${JSON.stringify(recommendationAnalysis, null, 2)}
 
-Provide:
-
+Report structure:
 1. Executive Summary
+2. Overall Portfolio Health Assessment
+3. Best Performing Project and why it is strong
+4. Most At-Risk Project, key risk drivers, and root causes
+5. Metrics dashboard with values, thresholds, and implications
+6. Key Risks with severity, impact, and mitigation focus
+7. Actionable recommendations prioritized by urgency
+8. Top priorities for the next planning cycle
 
-2. Project Health Assessment
-
-3. Fast progress and delay progress project
-
-3. Key Risks
-
-4. Positive Highlights
-
-5. Recommendations
-
-Keep the report professional and concise.
+Guidelines:
+- Use exact metrics from the analytics object.
+- When naming projects, use projectKey or the provided project summaries.
+- Focus on schedule, backlog, critical priority, assignment, delivery risk, and quality.
+- Avoid generic language and raw API implementation details.
+- Keep the report technical, practical, and concise.
 `;
 
-  const report =
-    await generateProjectSummary(
-      prompt
-    );
+  const report = await generateProjectSummary(prompt);
 
   console.log("REPORT AGENT COMPLETED");
 
