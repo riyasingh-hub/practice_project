@@ -25,17 +25,22 @@ async function execute(accountId) {
   const analytics =
     analyticsAgent.analyze(data);
 
-  const recommendationAnalysis =    recommendationAgent.generateRecommendations(analytics,      riskAnalysis );
+  const riskAnalysis =
+    riskAgent.analyzeRisk(
+      analytics
+    );
+
+  const recommendationAnalysis =
+    recommendationAgent.generateRecommendations(
+      analytics,
+      riskAnalysis
+    );
 
   const report =
     await reportAgent.generateReport(
       analytics,
-      riskAnalysis,     recommendationAnalysis
-    );
-
-  const riskAnalysis =
-    riskAgent.analyzeRisk(
-      analytics
+      riskAnalysis,
+      recommendationAnalysis
     );
 
     console.log( "ORCHESTRATOR COMPLETED" );

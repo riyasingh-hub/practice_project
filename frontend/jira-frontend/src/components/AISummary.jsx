@@ -10,25 +10,46 @@ export default function AISummary() {
     setError("");
     try {
       const response = await fetch(
-        "http://localhost:3000/api/jira-data/ai-summary",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({})
-        }
+        "http://localhost:3000/api/jira/test-report-agent"
       );
 
       const data = await response.json();
+      const reportText = data.report || data.reportText || "No AI summary available.";
 
-      setSummary(data.aiSummary || data.rawResponse || "No AI summary available.");
+      setSummary(reportText);
     } catch (err) {
       console.error("AI Summary Error:", err);
       setError("Failed to load AI summary.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderSummaryPoints = () => {
+    if (!summary) return null;
+
+    const lines = summary
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length === 0) {
+      return (
+        <p className="text-gray-300">
+          No summary points are available.
+        </p>
+      );
+    }
+
+    return (
+      <ul className="list-disc list-inside space-y-2 text-gray-300">
+        {lines.map((line, index) => (
+          <li key={index}>
+            {line}
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
@@ -60,9 +81,15 @@ export default function AISummary() {
       {error ? (
         <p className="text-red-400">{error}</p>
       ) : (
-        <p className="text-gray-300 leading-8 whitespace-pre-line">
-          {summary || "Click \"Generate AI Summary\" to create a summary."}
-        </p>
+        <div className="space-y-3">
+          {summary ? (
+            renderSummaryPoints()
+          ) : (
+            <p className="text-gray-300">
+              Click "Generate AI Summary" to create a summary.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

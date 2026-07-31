@@ -255,7 +255,7 @@ export default function MainDashboard() {
       </div>
     </div>
 
-    <div className="flex items-center gap-3[#-2 rounded-lg bg-green-500/10 texter border-[#1a2a45]">
+    <div className="flex items-center gap-3 bg-[#111d33]/70 rounded-xl p-4 border border-[#1a2a45]">
       <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
         <FolderKanban size={20} />
       </div>

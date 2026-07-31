@@ -2,9 +2,13 @@ const {
   generateProjectSummary
 } = require("../services/aiService");
 
-async function generateReport(analytics) {
+async function generateReport(
+  analytics,
+  riskAnalysis = {},
+  recommendationAnalysis = {}
+) {
 
-   console.log("REPORT AGENT STARTED");
+  console.log("REPORT AGENT STARTED");
 
   const prompt = `
 You are a Senior PMO, Delivery Manager and Engineering Leader.
@@ -13,21 +17,21 @@ Analyze the project analytics below and create an executive report.
 
 Analytics:
 ${JSON.stringify(
-  data.analytics,
+  analytics,
   null,
   2
 )}
 
 Risk Analysis:
 ${JSON.stringify(
-  data.riskAnalysis,
+  riskAnalysis,
   null,
   2
 )}
 
 Recommendations:
 ${JSON.stringify(
-  data.recommendationAnalysis,
+  recommendationAnalysis,
   null,
   2
 )}
@@ -54,7 +58,7 @@ Keep the report professional and concise.
       prompt
     );
 
-    console.log("REPORT AGENT COMPLETED");
+  console.log("REPORT AGENT COMPLETED");
 
   return report;
 }
