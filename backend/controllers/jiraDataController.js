@@ -19,7 +19,25 @@ const {
   calculateMetrics
 } = require("../services/metricsService");
 
+const dataAgent =
+  require("../agents/dataAgent");
 
+const analyticsAgent =
+  require("../agents/analyticsAgent");
+
+const reportAgent =
+  require("../agents/reportAgent");
+
+  const orchestratorAgent =
+  require("../agents/orchestratorAgent");
+
+  const riskAgent =
+  require("../agents/riskAgent");
+
+  const recommendationAgent =
+  require("../agents/recommendationAgent");
+
+  
 
 const {
   getAccessToken,
@@ -676,4 +694,211 @@ const accountId =
   }
 };
  
+exports.testDataAgent = async (
+  req,
+  res
+) => {
+  try {
+
+    const currentUser =
+      await jiraService.getCurrentUser();
+
+    const accountId =
+      currentUser.accountId;
+
+    const data =
+      await dataAgent.getPortfolioData(
+        accountId
+      );
+
+    res.json(data);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+};
  
+exports.testAnalyticsAgent =
+  async (req, res) => {
+
+  try {
+
+    const currentUser =
+      await jiraService.getCurrentUser();
+
+    const accountId =
+      currentUser.accountId;
+
+    const data =
+      await dataAgent.getPortfolioData(
+        accountId
+      );
+
+    const analytics =
+      analyticsAgent.analyze(data);
+
+    res.json(analytics);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};
+
+exports.testReportAgent =
+  async (req, res) => {
+
+  try {
+
+    const analytics = {
+      healthScore: 80,
+      completionRate: 75,
+      backlogRate: 20,
+      bugCount: 8,
+      overdueTickets: 3
+    };
+
+    const report =
+      await reportAgent.generateReport(
+        analytics
+      );
+
+    res.json({
+      report
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+};
+
+exports.getAgentReport =
+  async (req, res) => {
+
+  try {
+
+    const currentUser =
+      await jiraService.getCurrentUser();
+
+    const accountId =
+      currentUser.accountId;
+
+    const result =
+      await orchestratorAgent.execute(
+        accountId
+      );
+
+    res.json(result);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message:
+        "Failed to generate report"
+    });
+
+  }
+
+};
+
+exports.testRiskAgent =
+  async (req, res) => {
+
+  try {
+
+    const currentUser =
+      await jiraService.getCurrentUser();
+
+    const accountId =
+      currentUser.accountId;
+
+    const data =
+      await dataAgent.getPortfolioData(
+        accountId
+      );
+
+    const analytics =
+      analyticsAgent.analyze(data);
+
+    const riskAnalysis =
+      riskAgent.analyzeRisk(
+        analytics
+      );
+
+    res.json(riskAnalysis);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+};
+
+exports.testRecommendationAgent =
+  async (req, res) => {
+
+  try {
+
+    const currentUser =
+      await jiraService.getCurrentUser();
+
+    const accountId =
+      currentUser.accountId;
+
+    const data =
+      await dataAgent.getPortfolioData(
+        accountId
+      );
+
+    const analytics =
+      analyticsAgent.analyze(data);
+
+    const riskAnalysis =
+      riskAgent.analyzeRisk(
+        analytics
+      );
+
+    const recommendationAnalysis =
+      recommendationAgent.generateRecommendations(
+        analytics,
+        riskAnalysis
+      );
+
+    res.json(
+      recommendationAnalysis
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+};

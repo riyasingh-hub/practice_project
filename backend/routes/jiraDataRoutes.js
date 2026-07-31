@@ -9,7 +9,13 @@ const {
   getStoredProjects,
   getStoredMetrics,
   getStoredUsers,
-  syncProjectData
+  syncProjectData,
+  testDataAgent,
+  testAnalyticsAgent,
+  testReportAgent,
+  getAgentReport,
+  testRiskAgent,
+  testRecommendationAgent
 } = require("../controllers/jiraDataController");
  
 const router = express.Router();
@@ -83,4 +89,39 @@ router.get(
   syncProjectData
 );
  
+router.get(
+  "/test-data-agent",
+  testDataAgent
+);
+
+router.get(
+  "/test-analytics-agent",
+  testAnalyticsAgent
+);
+
+router.get(
+  "/test-report-agent",
+  testReportAgent
+);
+
+router.get(
+  "/agent-report",
+  getAgentReport
+);
+
+router.get(
+  "/orchestrator/:accountId",
+  getAgentReport
+);
+
+router.get(
+  "/test-risk-agent",
+  testRiskAgent
+);
+
+router.get(
+  "/test-recommendation-agent",
+  testRecommendationAgent
+);
+
 module.exports = router;
