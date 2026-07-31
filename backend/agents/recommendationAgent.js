@@ -35,6 +35,18 @@
     );
   }
 
+  if (analytics.bestProject) {
+    recommendations.push(
+      `Capture lessons from the best performing project ${analytics.bestProject.projectKey} and apply its practices to higher-risk teams.`
+    );
+  }
+
+  if (analytics.highestRiskProject) {
+    recommendations.push(
+      `Focus the next recovery plan on ${analytics.highestRiskProject.projectKey}, targeting its overdue work, critical open issues, and resource gaps.`
+    );
+  }
+
   if (riskAnalysis.overallRisk === "HIGH") {
     recommendations.push(
       "Schedule an immediate project health review with stakeholders to address high risks and confirm escalation actions."

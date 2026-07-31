@@ -119,7 +119,8 @@ function analyze(data) {
       issue.issueType?.toLowerCase() === "bug"
   ).length;
 
-  const projectSummaries = buildProjectSummaries(issues);
+  const projectSummaries =
+    projects.length > 0 ? projects : buildProjectSummaries(issues);
 
   const bestProject = selectProjectByMetric(
     projectSummaries,
@@ -143,10 +144,34 @@ function analyze(data) {
     }
   );
 
+  const aggregatedStatus = projectSummaries.reduce(
+    (acc, project) => {
+      acc.open += project.openTickets || 0;
+      acc.inProgress += project.inProgressTickets || 0;
+      acc.inReview += project.inReviewTickets || 0;
+      acc.done += project.completedTickets || 0;
+      acc.overdue += project.overdueTickets || 0;
+      acc.highPriorityOpen += project.highPriorityOpenIssues || 0;
+      acc.unassigned += project.unassignedIssues || 0;
+      acc.bugs += project.bugCount || 0;
+      return acc;
+    },
+    {
+      open: 0,
+      inProgress: 0,
+      inReview: 0,
+      done: 0,
+      overdue: 0,
+      highPriorityOpen: 0,
+      unassigned: 0,
+      bugs: 0
+    }
+  );
+
   console.log("ANALYTICS AGENT COMPLETED");
 
   return {
-    totalProjects: projects.length,
+    totalProjects: projectSummaries.length,
     totalIssues,
     overdueTickets,
     overdueRate:
@@ -158,16 +183,17 @@ function analyze(data) {
     completionRate: metrics?.completionRate || 0,
     backlogRate: metrics?.backlogRate || 0,
     highPriorityOpenIssues:
-      metrics?.highPriorityOpenIssues || 0,
+      metrics?.highPriorityOpenIssues || aggregatedStatus.highPriorityOpen,
     unassignedIssues:
-      metrics?.unassignedIssues || 0,
+      metrics?.unassignedIssues || aggregatedStatus.unassigned,
     workloadDistribution:
       metrics?.workloadDistribution || {},
     priorityBreakdown:
       metrics?.priorityBreakdown || {},
     projectSummaries,
     bestProject,
-    highestRiskProject
+    highestRiskProject,
+    aggregatedStatus
   };
 }
 

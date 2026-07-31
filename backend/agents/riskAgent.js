@@ -68,6 +68,18 @@
     });
   }
 
+  if (analytics.highestRiskProject) {
+    risks.push({
+      type: "Project-level Risk",
+      severity: "High",
+      projectKey: analytics.highestRiskProject.projectKey,
+      reason:
+        "This project has the highest composite risk score due to overdue work, critical open issues, and backlog pressure.",
+      message:
+        `Highest risk project is ${analytics.highestRiskProject.projectKey}.`
+    });
+  }
+
   let overallRisk = "LOW";
 
   if (risks.length >= 4) {
@@ -80,7 +92,8 @@
 
   return {
     overallRisk,
-    risks
+    risks,
+    topRiskProject: analytics.highestRiskProject || null
   };
 }
 
