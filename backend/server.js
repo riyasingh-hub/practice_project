@@ -23,6 +23,7 @@ const PORT = process.env.PORT || 3000;
 
 const jiraAuthRoutes = require("./routes/jiraAuthRoutes");
 const jiraDataRoutes = require("./routes/jiraDataRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const { callback } = require("./controllers/jiraAuthController");
 
 const connectDB = require("./config/db");
@@ -32,6 +33,7 @@ connectDB();
 app.get("/callback", callback);
 app.use("/auth", jiraAuthRoutes);
 
+app.use("/api/chat", chatRoutes);
 app.use("/api/jira-data", jiraDataRoutes);
 app.use("/api/jira", jiraDataRoutes);
 

@@ -1,5 +1,14 @@
 function calculateMetrics(issues) {
 
+  console.log(
+    "Available Jira Statuses:",
+    [...new Set(
+      issues.map(issue => issue.status)
+    )]
+  );
+
+  
+
   const totalTickets = issues.length;
 
   const openTickets = issues.filter(

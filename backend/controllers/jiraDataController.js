@@ -71,6 +71,14 @@ exports.getJiraData = async (req, res) => {
     // Get all projects
     const projects =
   await jiraService.getProjects();
+
+  console.log(
+  "PROJECTS:",
+  projects.map(p => ({
+    key: p.key,
+    name: p.name
+  }))
+);
  
     // Save all projects in MongoDB (scoped to accountId)
     for (const p of projects) {
@@ -762,20 +770,42 @@ exports.testReportAgent =
 
   try {
 
-    const analytics = {
-      healthScore: 80,
-      completionRate: 75,
-      backlogRate: 20,
-      bugCount: 8,
-      overdueTickets: 3
-    };
+    const currentUser =
+      await jiraService.getCurrentUser();
 
-    const report =
-      await reportAgent.generateReport(
+    const accountId =
+      currentUser.accountId;
+
+    const data =
+      await dataAgent.getPortfolioData(
+        accountId
+      );
+
+    const analytics =
+      analyticsAgent.analyze(data);
+
+    const riskAnalysis =
+      riskAgent.analyzeRisk(
         analytics
       );
 
+    const recommendationAnalysis =
+      recommendationAgent.generateRecommendations(
+        analytics,
+        riskAnalysis
+      );
+
+    const report =
+      await reportAgent.generateReport(
+        analytics,
+        riskAnalysis,
+        recommendationAnalysis
+      );
+
     res.json({
+      analytics,
+      riskAnalysis,
+      recommendationAnalysis,
       report
     });
 

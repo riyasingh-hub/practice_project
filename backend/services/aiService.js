@@ -1,4 +1,17 @@
 const axios = require("axios");
+
+function normalizeAiText(text) {
+  if (!text || typeof text !== "string") {
+    return "No response generated.";
+  }
+
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/"/g, "")
+    .replace(/“|”/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
  
 async function generateProjectSummary(prompt) {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
@@ -32,7 +45,7 @@ async function generateProjectSummary(prompt) {
       }
     );
  
-    return (
+    return normalizeAiText(
       response.data?.choices?.[0]?.message?.content ||
       "No response generated."
     );

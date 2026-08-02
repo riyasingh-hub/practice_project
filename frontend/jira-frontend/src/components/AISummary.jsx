@@ -42,13 +42,20 @@ export default function AISummary() {
     }
 
     return (
-      <ul className="list-disc list-inside space-y-2 text-gray-300">
-        {lines.map((line, index) => (
-          <li key={index}>
-            {line}
-          </li>
-        ))}
-      </ul>
+      <div className="space-y-3 text-gray-300">
+        {lines.map((line, index) => {
+          const isSection = /^\d+\./.test(line);
+
+          return (
+            <p
+              key={index}
+              className={isSection ? "font-semibold text-white" : "leading-7"}
+            >
+              {line}
+            </p>
+          );
+        })}
+      </div>
     );
   };
 
