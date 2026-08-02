@@ -1,56 +1,82 @@
-function analyzeRisk(analytics) {
-
-     console.log("RISK AGENT STARTED");
+﻿function analyzeRisk(analytics) {
+  console.log("RISK AGENT STARTED");
 
   const risks = [];
 
-  // Health Risk
   if (analytics.healthScore < 60) {
     risks.push({
       type: "Project Health",
       severity: "High",
+      metric: "healthScore",
+      value: analytics.healthScore,
+      reason:
+        "Health score below 60 indicates cumulative delivery, backlog, and quality pressure.",
       message:
         "Project health score is below acceptable threshold."
     });
   }
 
-  // Backlog Risk
   if (analytics.backlogRate > 40) {
     risks.push({
       type: "Backlog",
       severity: "High",
+      metric: "backlogRate",
+      value: analytics.backlogRate,
+      reason:
+        "Backlog rate over 40% indicates the team is carrying too much unfinished work relative to total scope.",
       message:
         "Backlog is growing rapidly."
     });
   }
 
-  // Priority Risk
   if (analytics.highPriorityOpenIssues > 5) {
     risks.push({
       type: "Critical Issues",
       severity: "High",
+      metric: "highPriorityOpenIssues",
+      value: analytics.highPriorityOpenIssues,
+      reason:
+        "More than five unresolved high priority issues increases risk to delivery and quality commitments.",
       message:
         "Large number of unresolved high priority issues."
     });
   }
 
-  // Assignment Risk
   if (analytics.unassignedIssues > 0) {
     risks.push({
       type: "Resource Assignment",
       severity: "Medium",
+      metric: "unassignedIssues",
+      value: analytics.unassignedIssues,
+      reason:
+        "Unassigned work items can delay progress by creating ambiguity around ownership.",
       message:
         "There are unassigned tickets."
     });
   }
 
-  // Delivery Risk
   if (analytics.overdueTickets > 0) {
     risks.push({
       type: "Delivery Delay",
       severity: "Medium",
+      metric: "overdueTickets",
+      value: analytics.overdueTickets,
+      reason:
+        "Overdue tickets indicate work is not being completed on schedule and may impact downstream milestones.",
       message:
         "Project contains overdue work items."
+    });
+  }
+
+  if (analytics.highestRiskProject) {
+    risks.push({
+      type: "Project-level Risk",
+      severity: "High",
+      projectKey: analytics.highestRiskProject.projectKey,
+      reason:
+        "This project has the highest composite risk score due to overdue work, critical open issues, and backlog pressure.",
+      message:
+        `Highest risk project is ${analytics.highestRiskProject.projectKey}.`
     });
   }
 
@@ -66,7 +92,8 @@ function analyzeRisk(analytics) {
 
   return {
     overallRisk,
-    risks
+    risks,
+    topRiskProject: analytics.highestRiskProject || null
   };
 }
 

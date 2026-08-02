@@ -1,4 +1,4 @@
-function generateRecommendations(
+﻿function generateRecommendations(
   analytics,
   riskAnalysis
 ) {
@@ -7,35 +7,49 @@ function generateRecommendations(
 
   if (analytics.backlogRate > 30) {
     recommendations.push(
-      "Reduce sprint backlog and prioritize high-value work."
+      "Reduce active backlog by validating scope, moving low-value work to a later release, and re-planning the next two sprints."
     );
   }
 
   if (analytics.unassignedIssues > 0) {
     recommendations.push(
-      "Assign ownership for all unassigned issues."
+      "Assign clear owners to all unassigned issues and align the team on ownership and next steps."
     );
   }
 
   if (analytics.overdueTickets > 0) {
     recommendations.push(
-      "Review overdue tickets and create recovery plan."
+      "Review overdue tickets immediately, escalate blockers, and establish a time-boxed recovery plan."
     );
   }
 
-  if (
-    analytics.highPriorityOpenIssues > 5
-  ) {
+  if (analytics.highPriorityOpenIssues > 5) {
     recommendations.push(
-      "Prioritize critical issues in the next sprint."
+      "Reprioritize the next sprint around critical issues and ensure dedicated capacity for high priority fixes."
     );
   }
 
-  if (
-    riskAnalysis.overallRisk === "HIGH"
-  ) {
+  if (analytics.bugCount > 0) {
     recommendations.push(
-      "Conduct immediate project health review."
+      "Validate bug triage and assign top defects to the team to prevent quality debt from impacting release readiness."
+    );
+  }
+
+  if (analytics.bestProject) {
+    recommendations.push(
+      `Capture lessons from the best performing project ${analytics.bestProject.projectKey} and apply its practices to higher-risk teams.`
+    );
+  }
+
+  if (analytics.highestRiskProject) {
+    recommendations.push(
+      `Focus the next recovery plan on ${analytics.highestRiskProject.projectKey}, targeting its overdue work, critical open issues, and resource gaps.`
+    );
+  }
+
+  if (riskAnalysis.overallRisk === "HIGH") {
+    recommendations.push(
+      "Schedule an immediate project health review with stakeholders to address high risks and confirm escalation actions."
     );
   }
 
@@ -45,7 +59,7 @@ function generateRecommendations(
     ).length > 0
   ) {
     recommendations.push(
-      "Review workload distribution across team members."
+      "Review workload distribution and rebalance assignments to avoid bottlenecks on overloaded team members."
     );
   }
 

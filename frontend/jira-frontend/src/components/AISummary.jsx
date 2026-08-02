@@ -10,7 +10,7 @@ export default function AISummary() {
     setError("");
     try {
       const response = await fetch(
-        "http://localhost:3000/api/jira/test-report-agent"
+        "http://localhost:3000/api/jira/agent-report"
       );
 
       const data = await response.json();
@@ -28,12 +28,12 @@ export default function AISummary() {
   const renderSummaryPoints = () => {
     if (!summary) return null;
 
-    const lines = summary
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+    const sections = summary
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter(Boolean);
 
-    if (lines.length === 0) {
+    if (sections.length === 0) {
       return (
         <p className="text-gray-300">
           No summary points are available.
@@ -42,17 +42,42 @@ export default function AISummary() {
     }
 
     return (
-      <div className="space-y-3 text-gray-300">
-        {lines.map((line, index) => {
-          const isSection = /^\d+\./.test(line);
+      <div className="space-y-6 text-gray-300">
+        {sections.map((section, index) => {
+          const lines = section
+            .split(/\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+
+          if (lines.length === 0) return null;
+
+          const cleanTitle = lines[0]
+            .replace(/^#+\s*/, "")
+            .replace(/^[-*]\s*/, "")
+            .replace(/[:]+$/, "")
+            .trim();
+          const bodyLines = lines.slice(1);
+          const paragraphText = bodyLines
+            .map((line) =>
+              line
+                .replace(/^#+\s*/, "")
+                .replace(/^[-*]\s*/, "")
+                .trim()
+            )
+            .filter(Boolean)
+            .join(" ");
 
           return (
-            <p
-              key={index}
-              className={isSection ? "font-semibold text-white" : "leading-7"}
-            >
-              {line}
-            </p>
+            <div key={index} className="space-y-2">
+              {cleanTitle && (
+                <h3 className="text-base font-semibold text-white">
+                  {cleanTitle}
+                </h3>
+              )}
+              <p className="text-sm leading-7 text-gray-300">
+                {paragraphText || section.replace(/^#+\s*/, "").replace(/^[-*]\s*/, "").trim()}
+              </p>
+            </div>
           );
         })}
       </div>
@@ -60,13 +85,18 @@ export default function AISummary() {
   };
 
   return (
-    <div className="bg-[#081120] p-6 rounded-xl border border-[#16243d]">
-      <h2 className="text-xl mb-4">AI Summary</h2>
+    <div className="bg-[#081120] p-6 rounded-xl border border-[#16243d] shadow-lg shadow-black/20">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-white">AI Summary</h2>
+        <span className="text-xs uppercase tracking-wide text-gray-400">
+          Executive Report
+        </span>
+      </div>
 
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <button
           onClick={fetchAISummary}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
           disabled={loading}
         >
           {loading ? "Generating..." : "Generate AI Summary"}
@@ -78,7 +108,7 @@ export default function AISummary() {
               setSummary("");
               setError("");
             }}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md transition"
           >
             Clear
           </button>
