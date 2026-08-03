@@ -25,8 +25,31 @@ function isPortfolioComparisonQuestion(message) {
 function isProjectSpecificQuestion(message) {
   const lower = String(message || "").toLowerCase();
 
-  return /(this project|that project|for tc|project details|project health|status of|risk of|completion rate of|backlog of|assignee|unassigned)/.test(lower)
+  return /(progress|progress of|progress for|this project|that project|for tc|project details|project health|health of|status of|risk of|completion rate of|backlog of|assignee|unassigned|recommendation for|recommendations for|recommendations about)/.test(lower)
     && !isPortfolioComparisonQuestion(message);
+}
+
+function getProjectKeyFromMessage(message, projects) {
+  if (!message || !projects?.length) {
+    return null;
+  }
+
+  const lower = message.toLowerCase();
+
+  for (const project of projects) {
+    const projectKey = String(project.key || "").toUpperCase();
+    const projectName = String(project.name || "").toLowerCase();
+
+    if (projectKey && lower.includes(projectKey.toLowerCase())) {
+      return projectKey;
+    }
+
+    if (projectName && lower.includes(projectName)) {
+      return projectKey;
+    }
+  }
+
+  return null;
 }
 
 function buildProjectComparison(projects, issues) {
@@ -51,20 +74,47 @@ function buildProjectComparison(projects, issues) {
   });
 }
 
-async function handleChatQuestion({ message, projectKey, sessionId }) {
+async function handleChatQuestion({ message, projectKey, sessionId, accountId: requestAccountId }) {
   console.log("CHAT AGENT STARTED");
 
-  const currentUser = await jiraService.getCurrentUser();
-  const accountId = currentUser.accountId;
+  let accountId = String(requestAccountId || "").trim();
+
+  try {
+    if (!accountId) {
+      const currentUser = await jiraService.getCurrentUser();
+      accountId = currentUser?.accountId;
+    }
+  } catch (error) {
+    console.warn(
+      "Jira lookup failed, falling back to local portfolio data:",
+      error.message || error
+    );
+  }
+
+  if (!accountId) {
+    accountId = await dataAgent.getDefaultAccountId();
+  }
+
+  if (!accountId) {
+    throw new Error(
+      "Unable to determine a local account. Please sync Jira or add local project data so I can answer projects, health, risk, and recommendation questions."
+    );
+  }
 
   const data = await dataAgent.getPortfolioData(accountId);
+
+  if (!data.projects?.length && !data.issues?.length) {
+    return "No local project data is available for this account. Please sync Jira data or seed project data first.";
+  }
+
   const normalizedProjectKey = String(projectKey || "").trim().toUpperCase();
   const previousProjectKey = getLastProjectKey(sessionId);
   const isPortfolioComparison = isPortfolioComparisonQuestion(message);
   const isProjectSpecific = isProjectSpecificQuestion(message);
-  const activeProjectKey = isProjectSpecific
-    ? normalizedProjectKey || previousProjectKey
-    : previousProjectKey;
+  const inferredProjectKey = getProjectKeyFromMessage(message, data.projects);
+  const activeProjectKey = isPortfolioComparison
+    ? previousProjectKey
+    : normalizedProjectKey || inferredProjectKey || (isProjectSpecific ? previousProjectKey : null);
   const isProjectScoped = Boolean(activeProjectKey) && !isPortfolioComparison;
 
   let scopedData = {

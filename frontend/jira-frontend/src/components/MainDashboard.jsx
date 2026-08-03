@@ -19,13 +19,17 @@ export default function MainDashboard() {
   const [metrics, setMetrics] = useState(null);
  
   useEffect(() => {
+    let active = true;
+
     const fetchData = async () => {
       try {
         const jiraRes = await axios.get(
           "http://localhost:3000/api/jira-data"
         );
         const accountId = jiraRes.data?.user?.accountId;
- 
+
+        await axios.get("http://localhost:3000/api/jira-data/sync-all");
+
         // fetch DB-backed data scoped to accountId
         const [issuesRes, projectsRes, metricsRes] = await Promise.all([
           axios.get(
@@ -38,18 +42,30 @@ export default function MainDashboard() {
             `http://localhost:3000/api/jira-data/db/metrics${accountId ? `?accountId=${accountId}` : ""}`
           ),
         ]);
- 
+
+        if (!active) return;
+
         setJiraData(jiraRes.data);
         setIssues(issuesRes.data);
         setProjects(projectsRes.data);
         setMetrics(metricsRes.data);
-        console.log("projects",projectsRes.data);
+        console.log("projects", projectsRes.data);
       } catch (error) {
         console.error(error);
       }
     };
- 
+
     fetchData();
+    const intervalId = setInterval(fetchData, 15000);
+    const handleFocus = () => fetchData();
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
  
   if (
@@ -104,27 +120,24 @@ export default function MainDashboard() {
       const priority = issuePriority(issue);
       const dueDate = issueDueDate(issue);
       const done = /done|closed|resolved/.test(status);
+      const dueTs = dueDate ? Date.parse(dueDate) : NaN;
+      const isOverdue = !done && !Number.isNaN(dueTs) && dueTs < now;
 
-      if (!done) {
-        openCount += 1;
-      }
-      if (status.includes("progress")) {
-        inProgressCount += 1;
-      }
       if (done) {
         completedCount += 1;
+      } else if (isOverdue) {
+        overdueCount += 1;
+      } else if (status.includes("progress")) {
+        inProgressCount += 1;
+      } else {
+        openCount += 1;
       }
+
       if (priority.includes("high") || priority.includes("critical")) {
         highPriorityCount += 1;
       }
       if (!issue.assignee || issue.assignee === "Unassigned") {
         unassignedCount += 1;
-      }
-      if (dueDate) {
-        const dueTs = Date.parse(dueDate);
-        if (!done && !Number.isNaN(dueTs) && dueTs < now) {
-          overdueCount += 1;
-        }
       }
     });
 

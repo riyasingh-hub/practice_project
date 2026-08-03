@@ -180,7 +180,31 @@ function buildProjectDetails(project, issues) {
   };
 }
 
+async function getDefaultAccountId() {
+  const project = await Project.findOne();
+  if (project?.accountId) return project.accountId;
+
+  const issue = await Issue.findOne();
+  if (issue?.accountId) return issue.accountId;
+
+  const user = await User.findOne();
+  if (user?.accountId) return user.accountId;
+
+  return null;
+}
+
+async function resolveAccountId(accountId) {
+  return accountId || (await getDefaultAccountId());
+}
+
 async function getPortfolioData(accountId) {
+  accountId = await resolveAccountId(accountId);
+
+  if (!accountId) {
+    throw new Error(
+      "No account data available. Please sync Jira data or seed local project data."
+    );
+  }
 
   console.log("DATA AGENT STARTED");
   const rawProjects = await Project.find({
@@ -239,6 +263,7 @@ async function getProjectData(
 
 module.exports = {
   getPortfolioData,
-  getProjectData
+  getProjectData,
+  getDefaultAccountId
 };
 

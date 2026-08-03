@@ -702,6 +702,91 @@ const accountId =
   }
 };
  
+exports.syncAllProjectData = async (
+  req,
+  res
+) => {
+  try {
+    const authContext = jiraService.getAuthContext();
+    const { accessToken, cloudId } = authContext;
+
+    if (!accessToken || !cloudId) {
+      return res.status(401).json({
+        message: "Not authenticated"
+      });
+    }
+
+    const currentUser = await jiraService.getCurrentUser();
+    const accountId = currentUser.accountId;
+
+    const projects = await Project.find({ accountId });
+
+    for (const project of projects) {
+      const projectKey = project.key;
+      const issues = await jiraService.getProjectIssues(projectKey);
+
+      for (const issue of issues) {
+        const fields = issue.fields || {};
+        await Issue.findOneAndUpdate(
+          {
+            jiraId: issue.id,
+            accountId
+          },
+          {
+            accountId,
+            jiraId: issue.id,
+            projectKey,
+            key: issue.key,
+            summary: fields.summary || "",
+            status: fields.status?.name || "Unknown",
+            issueType: fields.issuetype?.name || "",
+            priority: fields.priority?.name || fields.priority || "",
+            assignee: fields.assignee?.displayName || "Unassigned",
+            reporter: fields.reporter?.displayName || "",
+            created: fields.created,
+            updated: fields.updated,
+            resolvedAt: fields.resolutiondate,
+            dueDate: fields.duedate,
+            labels: fields.labels || []
+          },
+          {
+            upsert: true,
+            new: true
+          }
+        );
+      }
+    }
+
+    const storedIssues = await Issue.find({ accountId });
+    const metrics = calculateMetrics(storedIssues);
+
+    await Metrics.findOneAndUpdate(
+      {
+        accountId,
+      },
+      {
+        accountId,
+        ...metrics,
+        updatedAt: new Date()
+      },
+      {
+        upsert: true
+      }
+    );
+
+    res.json({
+      message: "All projects synced successfully",
+      issueCount: storedIssues.length,
+      metrics
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message || "Failed to sync all projects"
+    });
+  }
+};
+ 
 exports.testDataAgent = async (
   req,
   res

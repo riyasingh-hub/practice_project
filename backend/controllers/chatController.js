@@ -7,7 +7,7 @@ const {
 
 exports.askChat = async (req, res) => {
   try {
-    const { message, projectKey, sessionId } = req.body || {};
+    const { message, projectKey, sessionId, accountId } = req.body || {};
 
     if (!message || !message.trim()) {
       return res.status(400).json({
@@ -22,7 +22,8 @@ exports.askChat = async (req, res) => {
     const answer = await handleChatQuestion({
       message,
       projectKey,
-      sessionId
+      sessionId,
+      accountId
     });
 
     appendMessage(sessionId, "assistant", answer);

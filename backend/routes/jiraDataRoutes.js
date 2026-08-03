@@ -10,6 +10,7 @@ const {
   getStoredMetrics,
   getStoredUsers,
   syncProjectData,
+  syncAllProjectData,
   testDataAgent,
   testAnalyticsAgent,
   testReportAgent,
@@ -87,6 +88,11 @@ router.post(
 router.get(
   "/sync/:projectKey",
   syncProjectData
+);
+ 
+router.get(
+  "/sync-all",
+  syncAllProjectData
 );
  
 router.get(
